@@ -78,7 +78,10 @@ class FeatureExtractor:
             rot = Rotation.from_quat([x, y, z, w])
             return rot.apply(vectors)
         except ImportError:
-            logger.debug("scipy not available; skipping rotation")
+            logger.warning(
+                "scipy not available; rotation requested by config "
+                "but will be skipped — install scipy for full functionality"
+            )
         except Exception as exc:
             logger.warning(f"Rotation application failed: {exc}")
         return vectors

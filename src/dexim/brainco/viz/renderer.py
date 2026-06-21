@@ -77,7 +77,7 @@ class BrainCoRenderer:
         host: str = "localhost",
         port: int = 8080,
         verbose: bool = True,
-        show_frames: bool = True,
+        show_frames: bool = False,
         show_geometry: bool = True,
         show_ee_spheres: bool = True,
         scale: float = 1.0,
@@ -630,11 +630,11 @@ class BrainCoRenderer:
         if self.verbose:
             print("BrainCoRenderer closed")
 
-    def __enter__(self):
+    def __enter__(self) -> "BrainCoRenderer":
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         """Context manager exit."""
         self.close()
 

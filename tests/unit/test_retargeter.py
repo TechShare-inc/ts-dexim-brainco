@@ -57,12 +57,31 @@ class TestConstruction:
         Retargeter(opt, alpha=None)
         assert opt.alpha == [1.0, 1.0, 1.0, 1.0, 1.0]
 
-    def test_graceful_fallback_on_alpha_set_failure(self):
-        """If setting alpha on the optimizer raises, defaults to [1.0]*5."""
-        opt = MagicMock()
-        del opt.alpha  # Remove alpha attribute to trigger AttributeError
+    def test_graceful_fallback_on_alpha_set_failure(self, caplog):
+        """If setting alpha on the optimizer raises, defaults to [1.0]*5 and warns."""
+
+        # Create an optimizer whose alpha setter rejects [0.5]*5 but
+        # allows the fallback value [1.0]*5.
+        class _RejectingOpt:
+            def __init__(self):
+                self._alpha = [1.0] * 5
+
+            @property
+            def alpha(self):
+                return self._alpha
+
+            @alpha.setter
+            def alpha(self, value):
+                if value == [0.5] * 5:
+                    raise ValueError("alpha validation failed")
+                self._alpha = value
+
+        opt = _RejectingOpt()
         r = Retargeter(opt, alpha=[0.5] * 5)
         assert r._optimizer.alpha == [1.0] * 5
+        assert any(
+            "falling back" in msg.lower() for msg in caplog.messages
+        ), f"Expected fallback warning in: {caplog.messages}"
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,22 @@
+# Auto-detect text files, ensure LF line endings
+* text=auto
+
+# Python
+*.py text diff=python eol=lf
+
+# YAML
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# TOML
+*.toml text eol=lf
+
+# URDF / XML / ROS2 launch
+*.urdf text eol=lf
+*.xacro text eol=lf
+*.launch.py text eol=lf
+
+# Meshes (binary)
+*.stl binary
+*.STL binary
+*.dae binary

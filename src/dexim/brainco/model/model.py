@@ -229,7 +229,15 @@ class BrainCoModel(BaseHandModel):
     def _ensure_built(self) -> None:
         if self._built:
             return
-        self._build()
+        try:
+            self._build()
+        except Exception as exc:
+            raise RuntimeError(
+                f"BrainCoModel build failed for hand_side={self.hand_side!r}. "
+                f"Ensure revo2_description is vendored at "
+                f"{_VENDOR_ROOT / 'urdf' / f'revo2_{self.hand_side}_hand.urdf'} "
+                f"and pinocchio is installed."
+            ) from exc
 
     def _build(self) -> None:
         """Build the Pinocchio model and geometry from the vendored URDF."""

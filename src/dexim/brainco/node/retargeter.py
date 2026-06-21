@@ -26,6 +26,10 @@ class Retargeter:
             try:
                 self._optimizer.alpha = alpha
             except Exception:
+                logger.warning(
+                    f"Failed to set optimizer alpha={alpha}, "
+                    f"falling back to [1.0]*5"
+                )
                 self._optimizer.alpha = [1.0] * 5
         logger.info(f"Optimizer alpha: {self._optimizer.alpha}")
 

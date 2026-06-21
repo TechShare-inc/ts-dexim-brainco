@@ -25,7 +25,7 @@ def joint_group() -> None:
     """Send one-shot joint commands or watch live hardware state."""
 
 
-def _hardware_target_options(func):
+def _hardware_target_options(func: callable) -> callable:
     func = click.option(
         "--config-dir",
         type=click.Path(path_type=Path, file_okay=False),

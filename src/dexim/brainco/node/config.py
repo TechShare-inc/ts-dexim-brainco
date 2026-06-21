@@ -63,28 +63,6 @@ class VizConfig:
     fps: float = 30.0
 
 
-# Re-export shared configs for convenience
-__all__ = [
-    "SubscriberProtocol",
-    "WaitableSubscriberProtocol",
-    "SubscriberConfig",
-    "ControlConfig",
-    "BrainCoHwConfig",
-    "BrainCoRS485Config",
-    "InterfaceConfig",
-    "HardwareCoreConfig",
-    "FeatureExtractionConfig",
-    "FilterConfig",
-    "BrainCoConfig",
-    "BrainCoNodeConfig",
-    "VizConfig",
-    "load_config",
-    # Port utilities
-    "get_default_manus_address",
-    "NODE_DATA_PORTS",
-]
-
-
 @runtime_checkable
 class SubscriberProtocol(Protocol):
     """Structural protocol for any data subscriber used by BrainCoControlNode.
@@ -131,7 +109,7 @@ class FeatureExtractionConfig:
     dst_indices: list[int] = field(default_factory=lambda: [4, 9, 14, 19, 24])
     apply_rotation: bool = True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if len(self.src_indices) != len(self.dst_indices):
             raise ValueError(
                 f"src_indices and dst_indices must have the same length, "
@@ -241,7 +219,7 @@ class BrainCoConfig:
     # Optional smoothing filter configuration
     filter: FilterConfig | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.side not in ["left", "right"]:
             raise ValueError(f"Invalid side: {self.side}. Must be 'left' or 'right'")
         if not isinstance(self.alpha, list) or len(self.alpha) != 5:
@@ -371,3 +349,25 @@ def load_config(config_path: str) -> BrainCoNodeConfig:
         bind_data=bind_data,
         observation_rate_hz=observation_rate_hz,
     )
+
+
+# Re-export shared configs for convenience
+__all__ = [
+    "SubscriberProtocol",
+    "WaitableSubscriberProtocol",
+    "SubscriberConfig",
+    "ControlConfig",
+    "BrainCoHwConfig",
+    "BrainCoRS485Config",
+    "InterfaceConfig",
+    "HardwareCoreConfig",
+    "FeatureExtractionConfig",
+    "FilterConfig",
+    "BrainCoConfig",
+    "BrainCoNodeConfig",
+    "VizConfig",
+    "load_config",
+    # Port utilities
+    "get_default_manus_address",
+    "NODE_DATA_PORTS",
+]

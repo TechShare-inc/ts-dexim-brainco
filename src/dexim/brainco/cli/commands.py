@@ -40,12 +40,7 @@ _DEFAULT_BAUD = 460800
     default=None,
     help="YAML config file or named config. Overrides other options if provided.",
 )
-@click.option(
-    "--config-dir",
-    type=click.Path(path_type=Path, file_okay=False),
-    default=None,
-    help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
-)
+@_hardware_target_options
 @click.option(
     "--mode",
     type=click.Choice(["mock", "hw"]),
@@ -54,44 +49,9 @@ _DEFAULT_BAUD = 460800
     help="Interface mode.",
 )
 @click.option(
-    "--hand",
-    type=click.Choice(["left", "right"]),
-    default="left",
-    show_default=True,
-    help="Hand side.",
-)
-@click.option(
     "--address",
     default=None,
     help="ZMQ address for Manus skeleton subscriber (default: tcp://localhost:5555).",
-)
-@click.option(
-    "--device",
-    default=None,
-    help="Named device from config/dexim/devices.yaml.",
-)
-@click.option(
-    "--port",
-    default=None,
-    help="RS-485 serial port (e.g. COM5).",
-)
-@click.option(
-    "--baud",
-    type=int,
-    default=None,
-    help="RS-485 baud rate (default: 460800).",
-)
-@click.option(
-    "--slave-id",
-    type=int,
-    default=None,
-    help="Modbus slave ID (default: 126=left, 127=right).",
-)
-@click.option(
-    "--auto-detect",
-    is_flag=True,
-    default=False,
-    help="Use BrainCo SDK auto-detection to find the device.",
 )
 @click.option(
     "--auto-start",
@@ -223,53 +183,13 @@ def run(
 
 
 @click.command()
+@_hardware_target_options
 @click.option(
     "--mode",
     type=click.Choice(["mock", "hw"]),
     default="hw",
     show_default=True,
     help="Interface mode.",
-)
-@click.option(
-    "--config-dir",
-    type=click.Path(path_type=Path, file_okay=False),
-    default=None,
-    help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
-)
-@click.option(
-    "--device",
-    default=None,
-    help="Named device from config/dexim/devices.yaml.",
-)
-@click.option(
-    "--hand",
-    type=click.Choice(["left", "right"]),
-    default="left",
-    show_default=True,
-    help="Hand side for direct RS-485 reads.",
-)
-@click.option(
-    "--port",
-    default=None,
-    help="RS-485 serial port.",
-)
-@click.option(
-    "--baud",
-    type=int,
-    default=None,
-    help="RS-485 baud rate.",
-)
-@click.option(
-    "--slave-id",
-    type=int,
-    default=None,
-    help="Modbus slave ID (default: 126=left, 127=right).",
-)
-@click.option(
-    "--auto-detect",
-    is_flag=True,
-    default=False,
-    help="Use BrainCo SDK auto-detection to find the device.",
 )
 @handle_cli_error
 def status(
@@ -344,42 +264,7 @@ def status(
 
 
 @click.command()
-@click.option(
-    "--config-dir",
-    type=click.Path(path_type=Path, file_okay=False),
-    default=None,
-    help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
-)
-@click.option(
-    "--device",
-    default=None,
-    help="Named device from config/dexim/devices.yaml.",
-)
-@click.option(
-    "--port",
-    default=None,
-    help="RS-485 serial port. If omitted, the CLI will auto-scan.",
-)
-@click.option("--baud", type=int, default=None, help="RS-485 baud rate.")
-@click.option(
-    "--hand",
-    type=click.Choice(["left", "right"]),
-    default="left",
-    show_default=True,
-    help="Hand side.",
-)
-@click.option(
-    "--slave-id",
-    type=int,
-    default=None,
-    help="Modbus slave ID (default: 126=left, 127=right).",
-)
-@click.option(
-    "--auto-detect",
-    is_flag=True,
-    default=False,
-    help="Use BrainCo SDK auto-detection to find the device.",
-)
+@_hardware_target_options
 @handle_cli_error
 def probe(
     config_dir: Path | None,
@@ -432,42 +317,7 @@ def probe(
 
 
 @click.command()
-@click.option(
-    "--config-dir",
-    type=click.Path(path_type=Path, file_okay=False),
-    default=None,
-    help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
-)
-@click.option(
-    "--device",
-    default=None,
-    help="Named device from config/dexim/devices.yaml.",
-)
-@click.option(
-    "--port",
-    default=None,
-    help="RS-485 serial port. If omitted, the CLI will auto-scan.",
-)
-@click.option("--baud", type=int, default=None, help="RS-485 baud rate.")
-@click.option(
-    "--hand",
-    type=click.Choice(["left", "right"]),
-    default="left",
-    show_default=True,
-    help="Hand side.",
-)
-@click.option(
-    "--slave-id",
-    type=int,
-    default=None,
-    help="Modbus slave ID (default: 126=left, 127=right).",
-)
-@click.option(
-    "--auto-detect",
-    is_flag=True,
-    default=False,
-    help="Use BrainCo SDK auto-detection to find the device.",
-)
+@_hardware_target_options
 @handle_cli_error
 def check(
     config_dir: Path | None,
@@ -663,7 +513,53 @@ def config_list(config_dir: Path | None) -> None:
     )
 
 
-def _config_dir_option(func):
+def _hardware_target_options(func: callable) -> callable:
+    """Shared CLI options for hardware-target commands (run/status/probe/check)."""
+    func = click.option(
+        "--config-dir",
+        type=click.Path(path_type=Path, file_okay=False),
+        default=None,
+        help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
+    )(func)
+    func = click.option(
+        "--device",
+        default=None,
+        help="Named device from config/dexim/devices.yaml.",
+    )(func)
+    func = click.option(
+        "--port",
+        default=None,
+        help="RS-485 serial port (e.g. COM5).",
+    )(func)
+    func = click.option(
+        "--baud",
+        type=int,
+        default=None,
+        help="RS-485 baud rate (default: 460800).",
+    )(func)
+    func = click.option(
+        "--hand",
+        type=click.Choice(["left", "right"]),
+        default="left",
+        show_default=True,
+        help="Hand side.",
+    )(func)
+    func = click.option(
+        "--slave-id",
+        type=int,
+        default=None,
+        help="Modbus slave ID (default: 126=left, 127=right).",
+    )(func)
+    func = click.option(
+        "--auto-detect",
+        is_flag=True,
+        default=False,
+        help="Use BrainCo SDK auto-detection to find the device.",
+    )(func)
+    return func
+
+
+def _config_dir_option(func: callable) -> callable:
     return click.option(
         "--config-dir",
         type=click.Path(path_type=Path, file_okay=False),
@@ -672,7 +568,7 @@ def _config_dir_option(func):
     )(func)
 
 
-def _config_field_options(func):
+def _config_field_options(func: callable) -> callable:
     """Shared CLI options for config new / config edit."""
     func = click.option(
         "--mode",
