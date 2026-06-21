@@ -12,3 +12,8 @@ Note:
 """
 
 __version__ = "0.1.0"
+
+from dexim.brainco.model.factory import create_model
+from dexim.brainco.model.model import BrainCoModel
+
+__all__ = ["BrainCoModel", "create_model"]
