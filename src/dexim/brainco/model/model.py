@@ -10,6 +10,8 @@ import pathlib
 from typing import TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt
+from dexim.core.model import BaseHandModel
 
 if TYPE_CHECKING:
     import pinocchio  # pragma: no cover
@@ -20,7 +22,7 @@ _VENDOR_ROOT = (
 )
 
 
-class BrainCoModel:
+class BrainCoModel(BaseHandModel):
     """Pinocchio-based kinematic model for BrainCo Revo2 hand.
 
     Loads the URDF from the vendored ``revo2_description`` package.
@@ -42,6 +44,7 @@ class BrainCoModel:
     ]
 
     def __init__(self, hand_side: str = "left") -> None:
+        super().__init__()
         if hand_side not in ("left", "right"):
             raise ValueError(f"hand_side must be 'left' or 'right', got {hand_side!r}")
         self.hand_side: str = hand_side
@@ -51,6 +54,11 @@ class BrainCoModel:
         self._geometry_model: pinocchio.GeometryModel | None = None
         self._geometry_data: pinocchio.GeometryData | None = None
         self._built = False
+
+        # BaseHandModel required attributes
+        self.valid_frame_names: list[str] = []
+        self.remaining_frame_names: list[str] = []
+        self.ee_frame_names: list[str] = []
 
     # -- public properties (all lazy-build the model on first access) -----------
 
@@ -102,13 +110,13 @@ class BrainCoModel:
         return [prefix + s for s in self._TIP_LINK_SUFFIXES]
 
     @property
-    def valid_frames(self) -> dict[str, "pinocchio.Frame"]:
+    def valid_frames(self) -> dict[str, pinocchio.Frame]:
         """Mapping of all frame names to their Pinocchio Frame objects."""
         self._ensure_built()
         return {f.name: f for f in self._model.frames}  # type: ignore[union-attr]
 
     @property
-    def tip_frames(self) -> dict[str, "pinocchio.Frame"]:
+    def tip_frames(self) -> dict[str, pinocchio.Frame]:
         """Mapping of tip-frame names to their Pinocchio Frame objects."""
         self._ensure_built()
         tip_names = set(self.tip_frame_names)
@@ -151,7 +159,28 @@ class BrainCoModel:
                 self._geometry_data,
             )
 
-    def get_frame_pose(self, frame_name: str) -> "pinocchio.SE3":
+    def get_frame_id(self, frame_name: str) -> int:
+        """Get the frame ID for a given frame name.
+
+        Args:
+            frame_name: Full frame name (e.g. ``"left_thumb_tip_link"``).
+
+        Returns:
+            Frame ID in the model.
+
+        Raises:
+            ValueError: If the frame name is not found.
+        """
+        self._ensure_built()
+        try:
+            return self._model.getFrameId(frame_name)  # type: ignore[union-attr]
+        except Exception:
+            raise ValueError(
+                f"Frame '{frame_name}' not found in model. "
+                f"Available frames: {list(self.valid_frames.keys())[:20]}..."
+            )
+
+    def get_frame_pose(self, frame_name: str) -> pinocchio.SE3:
         """Return the SE3 pose of a named frame in world coordinates.
 
         Args:
@@ -161,19 +190,39 @@ class BrainCoModel:
             Pinocchio SE3 placement after the last FK call.
 
         Raises:
-            KeyError: If the frame name is not found.
+            ValueError: If the frame name is not found.
         """
-        import pinocchio
-
-        self._ensure_built()
-        try:
-            frame_id = self._model.getFrameId(frame_name)  # type: ignore[union-attr]
-        except Exception:
-            raise KeyError(
-                f"Frame '{frame_name}' not found in model. "
-                f"Available frames: {list(self.valid_frames.keys())[:20]}..."
-            )
+        frame_id = self.get_frame_id(frame_name)
         return self._data.oMf[frame_id]  # type: ignore[union-attr, index]
+
+    def get_keypoint_targets(self) -> list[tuple[str, str]]:
+        """Get the list of keypoint target pairs for optimisation.
+
+        Returns:
+            List of ``(source_frame, destination_frame)`` tuples, one per
+            finger.  Source frames are the proximal / metacarpal links;
+            destination frames are the tip links.
+        """
+        p = self.prefix
+        return [
+            (f"{p}thumb_metacarpal_link", f"{p}thumb_tip_link"),
+            (f"{p}index_proximal_link", f"{p}index_tip_link"),
+            (f"{p}middle_proximal_link", f"{p}middle_tip_link"),
+            (f"{p}ring_proximal_link", f"{p}ring_tip_link"),
+            (f"{p}pinky_proximal_link", f"{p}pinky_tip_link"),
+        ]
+
+    def get_joint_limits(self) -> tuple[npt.NDArray, npt.NDArray]:
+        """Get joint position limits.
+
+        Returns:
+            Tuple of ``(lower_limits, upper_limits)`` in radians.
+        """
+        self._ensure_built()
+        return (
+            self._model.lowerPositionLimit.copy(),  # type: ignore[union-attr]
+            self._model.upperPositionLimit.copy(),  # type: ignore[union-attr]
+        )
 
     # -- internal helpers -------------------------------------------------------
 

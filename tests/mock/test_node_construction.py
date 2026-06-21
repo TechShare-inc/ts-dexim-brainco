@@ -34,7 +34,8 @@ class TestConstruction:
     def test_retargeter_created(self, make_brainco_node):
         node = make_brainco_node()
         assert node._retargeter is not None
-        assert node._retargeter.alpha == [1.0, 1.0, 1.0, 1.0, 1.0]
+        assert node._retargeter._optimizer is not None
+        assert node._retargeter._optimizer.alpha == [1.0, 1.0, 1.0, 1.0, 1.0]
 
     def test_rate_limiter_and_dt_created(self, make_brainco_node):
         node = make_brainco_node()

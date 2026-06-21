@@ -11,8 +11,10 @@ Strategy
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
+import numpy as np
 import pytest
 
 from dexim.brainco.node.config import (
@@ -115,6 +117,41 @@ def patch_create_model(mock_brainco_model: MagicMock):
         yield mock_brainco_model
 
 
+@pytest.fixture()
+def mock_vector_optimizer():
+    """A mock VectorOptimizer standing in for the NLopt-based optimizer.
+
+    Returns:
+        MagicMock with ``alpha`` (list of 5 floats), ``retarget()`` returning
+        ``(q, nlopt_result)`` where ``nlopt_result`` is a SimpleNamespace
+        with ``.value`` and ``.name`` attributes.
+    """
+    opt = MagicMock()
+    opt.alpha = [1.0, 1.0, 1.0, 1.0, 1.0]
+
+    def _retarget(features):
+        q = np.zeros(6, dtype=np.float64)
+        result = SimpleNamespace(value=1, name="SUCCESS")
+        return q, result
+
+    opt.retarget.side_effect = _retarget
+    return opt
+
+
+@pytest.fixture()
+def patch_vector_optimizer(mock_vector_optimizer: MagicMock):
+    """Patch ``VectorOptimizer`` in node.py to return ``mock_vector_optimizer``.
+
+    Yields:
+        The ``mock_vector_optimizer`` fixture value (for assertions).
+    """
+    with patch(
+        "dexim.brainco.node.node.VectorOptimizer",
+        return_value=mock_vector_optimizer,
+    ):
+        yield mock_vector_optimizer
+
+
 # ---------------------------------------------------------------------------
 # Composed factory fixture
 # ---------------------------------------------------------------------------
@@ -125,6 +162,7 @@ def make_brainco_node(
     patch_zmq,
     patch_managed_node,
     patch_create_model,
+    patch_vector_optimizer,
     mock_subscriber: Mock,
 ):
     """Factory fixture that creates a fully-patched ``BrainCoControlNode``.

@@ -32,7 +32,7 @@ from dexim.core.nodes import PubSubDeviceNode
 from dexim.core.robot_interface import RobotInterface
 from loguru import logger
 
-from dexim.brainco.model import create_model
+from dexim.brainco.model import VectorOptimizer, create_model
 
 from .config import BrainCoNodeConfig, SubscriberProtocol
 from .extractor import FeatureExtractor
@@ -77,8 +77,9 @@ class BrainCoControlNode(PubSubDeviceNode):
 
         super().__init__(node_id=node_id)
 
-        # Model (Pinocchio-based kinematics, lazy-loaded from vendored URDF)
+        # Model + optimizer (Pinocchio-based kinematics + NLopt vector retargeting)
         self.model = create_model(hand_side=side)
+        optimizer = VectorOptimizer(self.model)
 
         # Interface -- mock/hw modes route through BrainCoInterface
         # which spawns P1 (hw-core) on connect().
@@ -112,10 +113,7 @@ class BrainCoControlNode(PubSubDeviceNode):
             safe_position_max_velocity_rad_s=cfg.control.safe_position_max_velocity_rad_s,
         )
         self._extractor = FeatureExtractor(bcfg.feature_extraction)
-        # BrainCo uses direct linear retargeting (no NLopt VectorOptimizer).
-        self._retargeter = Retargeter(
-            alpha=None,  # uses default [1.0, 1.0, 1.0, 1.0, 1.0]
-        )
+        self._retargeter = Retargeter(optimizer, alpha=bcfg.alpha)
         self._joint_filter = JointFilter(bcfg.filter, data_size=6)
         self._profiler = PipelineProfiler()
         self._health_check_counter: int = 0

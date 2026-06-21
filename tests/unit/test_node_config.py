@@ -116,6 +116,7 @@ class TestBrainCoConfig:
         assert cfg.side == "left"
         assert isinstance(cfg.feature_extraction, FeatureExtractionConfig)
         assert cfg.filter is None
+        assert cfg.alpha == [1.0, 1.0, 1.0, 1.0, 1.0]
 
     def test_right_side(self):
         cfg = BrainCoConfig(side="right")
@@ -129,6 +130,14 @@ class TestBrainCoConfig:
         fcfg = FilterConfig(type="ema", alpha=0.5)
         cfg = BrainCoConfig(filter=fcfg)
         assert cfg.filter is fcfg
+
+    def test_custom_alpha(self):
+        cfg = BrainCoConfig(alpha=[0.5, 0.6, 0.7, 0.8, 0.9])
+        assert cfg.alpha == [0.5, 0.6, 0.7, 0.8, 0.9]
+
+    def test_alpha_wrong_length_raises(self):
+        with pytest.raises(ValueError, match="alpha must be a list of 5"):
+            BrainCoConfig(alpha=[1.0, 2.0, 3.0])
 
 
 # ---------------------------------------------------------------------------

@@ -223,6 +223,8 @@ class BrainCoConfig:
     Attributes:
         side: Hand side -- ``"left"`` or ``"right"``.
         feature_extraction: Skeleton finger-vector extraction parameters.
+        alpha: Per-finger scaling factors applied before retargeting
+            (length 5, default all 1.0).
         filter: Optional joint-angle smoothing filter configuration.
     """
 
@@ -232,12 +234,18 @@ class BrainCoConfig:
         default_factory=FeatureExtractionConfig
     )
 
+    alpha: list[float] = field(
+        default_factory=lambda: [1.0, 1.0, 1.0, 1.0, 1.0]
+    )  # Per-finger scaling
+
     # Optional smoothing filter configuration
     filter: FilterConfig | None = None
 
     def __post_init__(self):
         if self.side not in ["left", "right"]:
             raise ValueError(f"Invalid side: {self.side}. Must be 'left' or 'right'")
+        if not isinstance(self.alpha, list) or len(self.alpha) != 5:
+            raise ValueError(f"alpha must be a list of 5 floats, got: {self.alpha}")
 
 
 @dataclass
