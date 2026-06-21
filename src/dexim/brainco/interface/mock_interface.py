@@ -22,6 +22,7 @@ from loguru import logger
 from dexim.brainco.interface._conversion import (
     JOINT_LIMITS,
     NUM_JOINTS,
+    URDF_ACTIVE_JOINT_INDICES,
     urdf_joint_names,
 )
 
@@ -50,26 +51,38 @@ class MockInterface(RobotInterface):
         self._model = brainco_model
         self._hand_side = hand_side.lower()
 
+        # The BrainCo Revo2 URDF has 11 revolute joints (proximal + distal
+        # for each finger, plus thumb metacarpal), but only 6 are actively
+        # commanded through the SDK.  The MockInterface must always track
+        # exactly NUM_JOINTS (6) regardless of the model's nq.
+        self._nq: int = NUM_JOINTS
+
         # Derive metadata from model when available.
         if brainco_model is not None:
-            self._nq: int = brainco_model.nq
-            if brainco_model.model is not None and brainco_model.model.names:
-                self._joint_names: list[str] = [
-                    brainco_model.model.names[i] for i in range(1, self._nq + 1)
-                ]
-            else:
-                self._joint_names = self._default_joint_names()
+            # Map the 6 active control joints (internal order) to their
+            # URDF-model indices (0-based).  See _conversion.py for details.
+            _active_indices = URDF_ACTIVE_JOINT_INDICES
             if brainco_model.model is not None:
+                # Pinocchio names are 1-indexed.
+                self._joint_names = [
+                    brainco_model.model.names[idx + 1] for idx in _active_indices
+                ]
                 self._lower = np.array(
-                    brainco_model.model.lowerPositionLimit[: self._nq]
+                    [
+                        brainco_model.model.lowerPositionLimit[idx]
+                        for idx in _active_indices
+                    ]
                 )
                 self._upper = np.array(
-                    brainco_model.model.upperPositionLimit[: self._nq]
+                    [
+                        brainco_model.model.upperPositionLimit[idx]
+                        for idx in _active_indices
+                    ]
                 )
             else:
+                self._joint_names = self._default_joint_names()
                 self._lower, self._upper = self._default_limits()
         else:
-            self._nq = NUM_JOINTS
             self._joint_names = self._default_joint_names()
             self._lower, self._upper = self._default_limits()
 
@@ -79,7 +92,7 @@ class MockInterface(RobotInterface):
         self._estop = False
         self._start_time = 0.0
 
-        logger.info("MockInterface initialized: %d joints", self._nq)
+        logger.info("MockInterface initialized: {} joints", self._nq)
 
     # ------------------------------------------------------------------
     # RobotInterface protocol

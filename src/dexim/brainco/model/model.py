@@ -70,6 +70,13 @@ class BrainCoModel(BaseHandModel):
         return f"{self.hand_side}_"
 
     @property
+    def geometry_data(self) -> "pinocchio.GeometryData":
+        """Pinocchio geometry data (placements for each geometry object)."""
+        if self._geometry_data is None:
+            raise RuntimeError("Geometry data not initialized.")
+        return self._geometry_data
+
+    @property
     def lower_joint_limits(self) -> list[float]:
         """Lower position limits (rad) for each active joint."""
         return self.model.lowerPositionLimit.tolist()

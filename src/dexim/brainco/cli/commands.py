@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
@@ -26,6 +27,52 @@ _HARDWARE_HINT = (
     "[muted]Install hardware support with: pip install 'dexim-brainco[hardware]'[/]"
 )
 _DEFAULT_BAUD = 460800
+
+
+def _hardware_target_options(func: Callable) -> Callable:
+    """Shared CLI options for hardware-target commands (run/status/probe/check)."""
+    func = click.option(
+        "--config-dir",
+        type=click.Path(path_type=Path, file_okay=False),
+        default=None,
+        help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
+    )(func)
+    func = click.option(
+        "--device",
+        default=None,
+        help="Named device from config/dexim/devices.yaml.",
+    )(func)
+    func = click.option(
+        "--port",
+        default=None,
+        help="RS-485 serial port (e.g. COM5).",
+    )(func)
+    func = click.option(
+        "--baud",
+        type=int,
+        default=None,
+        help="RS-485 baud rate (default: 460800).",
+    )(func)
+    func = click.option(
+        "--hand",
+        type=click.Choice(["left", "right"]),
+        default="left",
+        show_default=True,
+        help="Hand side.",
+    )(func)
+    func = click.option(
+        "--slave-id",
+        type=int,
+        default=None,
+        help="Modbus slave ID (default: 126=left, 127=right).",
+    )(func)
+    func = click.option(
+        "--auto-detect",
+        is_flag=True,
+        default=False,
+        help="Use BrainCo SDK auto-detection to find the device.",
+    )(func)
+    return func
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +104,10 @@ _DEFAULT_BAUD = 460800
     "--auto-start",
     is_flag=True,
     default=False,
-    help="Activate teleoperation immediately without waiting for an orchestrator START command.",
+    help=(
+        "Activate teleoperation immediately without waiting for an "
+        "orchestrator START command."
+    ),
 )
 @handle_cli_error
 def run(
@@ -78,7 +128,6 @@ def run(
 
     try:
         from dexim.brainco.interface.config import BrainCoRS485Config
-
         from dexim.brainco.node import (
             BrainCoConfig,
             BrainCoControlNode,
@@ -86,10 +135,7 @@ def run(
             SubscriberConfig,
             load_config,
         )
-        from dexim.brainco.node.config import (
-            BrainCoHwConfig,
-            InterfaceConfig,
-        )
+        from dexim.brainco.node.config import BrainCoHwConfig, InterfaceConfig
     except ImportError as exc:
         console.print(f"[error]Missing dependency: {exc}[/]")
         console.print(_IMPORT_HINT)
@@ -218,7 +264,13 @@ def status(
             _dev_cfg = _load_cfg(
                 str(resolve_device_config(device, _path_value(config_dir)))
             )
-            resolved_port, resolved_baud, resolved_hand, resolved_slave_id, resolved_auto_detect = _modbus_params_from_config(_dev_cfg)
+            (
+                resolved_port,
+                resolved_baud,
+                resolved_hand,
+                resolved_slave_id,
+                resolved_auto_detect,
+            ) = _modbus_params_from_config(_dev_cfg)
         else:
             resolved_port = port or default_serial_port()
             resolved_baud = baud or _DEFAULT_BAUD
@@ -277,7 +329,13 @@ def probe(
 ) -> None:
     """Connect once to hardware and print a joint snapshot."""
     console = get_console()
-    for candidate_port, candidate_baud, candidate_hand, candidate_slave_id, candidate_auto_detect in _modbus_probe_candidates(
+    for (
+        candidate_port,
+        candidate_baud,
+        candidate_hand,
+        candidate_slave_id,
+        candidate_auto_detect,
+    ) in _modbus_probe_candidates(
         config_dir=config_dir,
         device=device,
         port=port,
@@ -288,8 +346,10 @@ def probe(
     ):
         console.print(
             "[info]Trying "
-            f"[key]{candidate_port or '(auto-detect)'}[/key] @ [key]{candidate_baud}[/key] "
-            f"slave_id=[key]{candidate_slave_id}[/key] for [key]{candidate_hand}[/key] hand...[/]"
+            f"[key]{candidate_port or '(auto-detect)'}[/key] @ "
+            f"[key]{candidate_baud}[/key] "
+            f"slave_id=[key]{candidate_slave_id}[/key] for "
+            f"[key]{candidate_hand}[/key] hand...[/]"
         )
         state = _modbus_read_state(
             port=candidate_port if not candidate_auto_detect else None,
@@ -302,7 +362,9 @@ def probe(
             from .display import render_joint_state
 
             render_joint_state(
-                state, console, title=f"Probe Result * {candidate_port or '(auto-detect)'}"
+                state,
+                console,
+                title=f"Probe Result * {candidate_port or '(auto-detect)'}",
             )
             return
 
@@ -362,18 +424,33 @@ def check(
         slave_id=slave_id,
         auto_detect=auto_detect,
     )
-    first_port, first_baud, first_hand, first_slave_id, first_auto_detect = candidates[0]
+    (
+        first_port,
+        first_baud,
+        first_hand,
+        first_slave_id,
+        first_auto_detect,
+    ) = candidates[0]
     rows.append(
         (
             "Target selection",
             "[success]PASS[/]",
-            f"{first_port or '(auto-detect)'} @ {first_baud} slave_id={first_slave_id} ({first_hand})",
+            (
+                f"{first_port or '(auto-detect)'} @ {first_baud} "
+                f"slave_id={first_slave_id} ({first_hand})"
+            ),
         )
     )
 
     connected_state = None
     connected_port = None
-    for candidate_port, candidate_baud, candidate_hand, candidate_slave_id, candidate_auto_detect in candidates:
+    for (
+        candidate_port,
+        candidate_baud,
+        candidate_hand,
+        candidate_slave_id,
+        candidate_auto_detect,
+    ) in candidates:
         connected_state = _modbus_read_state(
             port=candidate_port if not candidate_auto_detect else None,
             baud=candidate_baud,
@@ -513,53 +590,7 @@ def config_list(config_dir: Path | None) -> None:
     )
 
 
-def _hardware_target_options(func: callable) -> callable:
-    """Shared CLI options for hardware-target commands (run/status/probe/check)."""
-    func = click.option(
-        "--config-dir",
-        type=click.Path(path_type=Path, file_okay=False),
-        default=None,
-        help="Config root directory (default: ./config or DEXIM_CONFIG_DIR).",
-    )(func)
-    func = click.option(
-        "--device",
-        default=None,
-        help="Named device from config/dexim/devices.yaml.",
-    )(func)
-    func = click.option(
-        "--port",
-        default=None,
-        help="RS-485 serial port (e.g. COM5).",
-    )(func)
-    func = click.option(
-        "--baud",
-        type=int,
-        default=None,
-        help="RS-485 baud rate (default: 460800).",
-    )(func)
-    func = click.option(
-        "--hand",
-        type=click.Choice(["left", "right"]),
-        default="left",
-        show_default=True,
-        help="Hand side.",
-    )(func)
-    func = click.option(
-        "--slave-id",
-        type=int,
-        default=None,
-        help="Modbus slave ID (default: 126=left, 127=right).",
-    )(func)
-    func = click.option(
-        "--auto-detect",
-        is_flag=True,
-        default=False,
-        help="Use BrainCo SDK auto-detection to find the device.",
-    )(func)
-    return func
-
-
-def _config_dir_option(func: callable) -> callable:
+def _config_dir_option(func: Callable) -> Callable:
     return click.option(
         "--config-dir",
         type=click.Path(path_type=Path, file_okay=False),
@@ -568,7 +599,7 @@ def _config_dir_option(func: callable) -> callable:
     )(func)
 
 
-def _config_field_options(func: callable) -> callable:
+def _config_field_options(func: Callable) -> Callable:
     """Shared CLI options for config new / config edit."""
     func = click.option(
         "--mode",
@@ -577,9 +608,14 @@ def _config_field_options(func: callable) -> callable:
         help="Interface mode.",
     )(func)
     func = click.option("--port", default=None, help="RS-485 serial port.")(func)
-    func = click.option("--baud", type=int, default=None, help="RS-485 baud rate.")(func)
+    func = click.option("--baud", type=int, default=None, help="RS-485 baud rate.")(
+        func
+    )
     func = click.option(
-        "--slave-id", type=int, default=None, help="Modbus slave ID (126=left, 127=right)."
+        "--slave-id",
+        type=int,
+        default=None,
+        help="Modbus slave ID (126=left, 127=right).",
     )(func)
     func = click.option(
         "--hand",
@@ -989,7 +1025,13 @@ def _modbus_read_state(
             return backend.read()
         finally:
             backend.disconnect()
-    except Exception:
+    except Exception as exc:
+        console = get_console()
+        console.print(
+            f"[warning]Connection failed: {exc}[/]\n"
+            f"  port={port}, baud={baud}, slave_id={slave_id}, "
+            f"hand={hand_side}, auto_detect={auto_detect}"
+        )
         return None
 
 
@@ -1046,7 +1088,15 @@ def _modbus_probe_candidates(
         return [(port, baud or _DEFAULT_BAUD, hand, resolved_slave_id, auto_detect)]
 
     if auto_detect:
-        return [(None, baud or _DEFAULT_BAUD, hand, slave_id or (126 if hand == "left" else 127), True)]
+        return [
+            (
+                None,
+                baud or _DEFAULT_BAUD,
+                hand,
+                slave_id or (126 if hand == "left" else 127),
+                True,
+            )
+        ]
 
     discovered_ports = scan_serial_ports()
     preferred_port = default_serial_port()

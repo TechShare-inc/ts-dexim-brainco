@@ -124,6 +124,27 @@ _INTERNAL_TO_URDF_SUFFIX: list[str] = [
     "pinky_proximal",
 ]
 
+# Indices of the 6 actively-controlled joints within the full URDF model
+# (0-based, in *internal* order).
+#
+# The BrainCo Revo2 URDF defines 11 revolute joints in this order:
+#   thumb_metacarpal(0), thumb_proximal(1), thumb_distal(2),
+#   index_proximal(3),   index_distal(4),
+#   middle_proximal(5),  middle_distal(6),
+#   ring_proximal(7),    ring_distal(8),
+#   pinky_proximal(9),   pinky_distal(10)
+#
+# Only the proximal (and thumb metacarpal) joints are actively commanded;
+# the distal joints are mechanically coupled.  The mapping below selects
+# the 6 active URDF joints in the internal (SDK) order:
+#   THUMB_FLEX  -> thumb_proximal    (URDF idx 1)
+#   THUMB_AUX   -> thumb_metacarpal  (URDF idx 0)
+#   INDEX       -> index_proximal    (URDF idx 3)
+#   MIDDLE      -> middle_proximal   (URDF idx 5)
+#   RING        -> ring_proximal     (URDF idx 7)
+#   PINKY       -> pinky_proximal    (URDF idx 9)
+URDF_ACTIVE_JOINT_INDICES: list[int] = [1, 0, 3, 5, 7, 9]
+
 
 def urdf_joint_names(hand_side: str = "left") -> list[str]:
     """Build URDF-prefixed joint names for the given hand side.
@@ -203,6 +224,7 @@ __all__ = [
     "JOINT_LIMITS",
     "INTERNAL_TO_API_MAP",
     "API_TO_INTERNAL_MAP",
+    "URDF_ACTIVE_JOINT_INDICES",
     "urdf_joint_names",
     "radians_to_api",
     "api_to_radians",

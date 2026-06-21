@@ -76,11 +76,16 @@ class DeviceRegistryEntry:
 def _validate_logical_config_name(config: str, device_name: str = "") -> None:
     """Ensure *config* is a logical name, not a file path.
 
+    Config names may use ``/`` as a namespace separator (e.g.
+    ``brainco/hw-left`` resolves to ``dexim/brainco/hw-left.yaml``).
+    Only bare file-system paths (backslash, ``.yaml``/``.yml`` suffix)
+    are rejected.
+
     Raises:
-        ValueError: If the value looks like a path (contains ``/``, ``\\``
-            or ends with ``.yaml``/``.yml``).
+        ValueError: If the value looks like a filesystem path (contains
+            ``\\`` or ends with ``.yaml``/``.yml``).
     """
-    if "/" in config or "\\" in config or config.endswith((".yaml", ".yml")):
+    if "\\" in config or config.endswith((".yaml", ".yml")):
         ctx = f" for device '{device_name}'" if device_name else ""
         raise ValueError(
             f"Config value '{config}'{ctx} looks like a file path.\n"

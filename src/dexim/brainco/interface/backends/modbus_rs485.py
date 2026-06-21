@@ -137,6 +137,26 @@ class BrainCoModbusRS485Backend:
             f"port={self._port}, baud={self._baud}"
         )
 
+    @staticmethod
+    def _baudrate_to_enum(baud: int, libstark: Any) -> Any:
+        """Convert an integer baud rate to a ``Baudrate`` enum value.
+
+        The SDK's ``modbus_open`` requires a ``Baudrate`` enum, not a plain
+        ``int``.  This helper performs the conversion.  If the value is
+        already a ``Baudrate`` instance it is returned unchanged (e.g. when
+        it came from ``auto_detect_modbus_revo2``).
+        """
+        if isinstance(baud, libstark.Baudrate):
+            return baud
+        try:
+            return libstark.Baudrate(baud)
+        except ValueError:
+            raise ValueError(
+                f"Unsupported baud rate: {baud}. "
+                f"Supported values: 115200, 57600, 19200, 460800, "
+                f"1000000, 2000000, 3000000, 5000000"
+            ) from None
+
     async def _connect_async(self, libstark: Any) -> None:
         """Async connect logic."""
         if self._auto_detect:
@@ -159,7 +179,8 @@ class BrainCoModbusRS485Backend:
                 "Serial port is required.  Set 'port' in config or enable auto_detect."
             )
 
-        self._client = await libstark.modbus_open(self._port, self._baud)
+        baudrate = self._baudrate_to_enum(self._baud, libstark)
+        self._client = await libstark.modbus_open(self._port, baudrate)
 
         await self._client.set_hardware_type(
             self._slave_id, libstark.StarkHardwareType.Revo2Basic
@@ -192,6 +213,11 @@ class BrainCoModbusRS485Backend:
                 import bc_stark_sdk.main_mod as libstark
 
                 self._loop.run_until_complete(libstark.modbus_close(self._client))
+            except RuntimeError:
+                # Event loop already stopped (e.g. by a prior read/write
+                # error); skip the async close — the serial port will be
+                # released when the loop itself is closed below.
+                pass
             except Exception:
                 logger.exception("Error closing Modbus connection")
 

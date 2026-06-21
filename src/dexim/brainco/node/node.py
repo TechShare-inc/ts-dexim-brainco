@@ -38,6 +38,13 @@ from .config import BrainCoNodeConfig, SubscriberProtocol
 from .extractor import FeatureExtractor
 from .retargeter import Retargeter
 
+# Active-joint URDF indices for extracting the 6 commanded DOF from the
+# full 11-DOF URDF model output produced by VectorOptimizer.retarget().
+from dexim.brainco.interface._conversion import (
+    NUM_JOINTS,
+    URDF_ACTIVE_JOINT_INDICES,
+)
+
 _FINGER_NAMES: tuple[str, ...] = ("thumb", "index", "middle", "ring", "pinky")
 
 
@@ -114,7 +121,7 @@ class BrainCoControlNode(PubSubDeviceNode):
         )
         self._extractor = FeatureExtractor(bcfg.feature_extraction)
         self._retargeter = Retargeter(optimizer, alpha=bcfg.alpha)
-        self._joint_filter = JointFilter(bcfg.filter, data_size=6)
+        self._joint_filter = JointFilter(bcfg.filter, data_size=NUM_JOINTS)
         self._profiler = PipelineProfiler()
         self._health_check_counter: int = 0
 
@@ -173,6 +180,9 @@ class BrainCoControlNode(PubSubDeviceNode):
                     scaled = self._retargeter.scale(features)
                     q = self._retargeter.retarget(scaled)
                 if q is not None:
+                    # Extract only the 6 actively-controlled joints from
+                    # the full 11-DOF URDF-model output.
+                    q = q[URDF_ACTIVE_JOINT_INDICES]
                     with self._profiler.stage("filter"):
                         q_smooth = self._joint_filter(q)
                     with self._profiler.stage("vel_lim"):
@@ -235,7 +245,7 @@ class BrainCoControlNode(PubSubDeviceNode):
     # ------------------------------------------------------------------
     def get_safe_position(self) -> np.ndarray:
         """Open-hand position (zeros = fully open)."""
-        return np.zeros(6)
+        return np.zeros(NUM_JOINTS)
 
     # ------------------------------------------------------------------
     # ManagedNode lifecycle hooks
