@@ -237,9 +237,7 @@ class BrainCoConfig:
 
     def __post_init__(self):
         if self.side not in ["left", "right"]:
-            raise ValueError(
-                f"Invalid side: {self.side}. Must be 'left' or 'right'"
-            )
+            raise ValueError(f"Invalid side: {self.side}. Must be 'left' or 'right'")
 
 
 @dataclass
@@ -301,9 +299,7 @@ def load_config(config_path: str) -> BrainCoNodeConfig:
 
         hw_core_data = hw_data.get("hardware_core", {})
         hw_core = (
-            HardwareCoreConfig(**hw_core_data)
-            if hw_core_data
-            else HardwareCoreConfig()
+            HardwareCoreConfig(**hw_core_data) if hw_core_data else HardwareCoreConfig()
         )
 
         rs485_data = hw_data.get("rs485")

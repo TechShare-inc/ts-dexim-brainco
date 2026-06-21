@@ -178,9 +178,7 @@ class BrainCoControlNode(PubSubDeviceNode):
                     with self._profiler.stage("filter"):
                         q_smooth = self._joint_filter(q)
                     with self._profiler.stage("vel_lim"):
-                        q_safe = self._motion_controller.apply_velocity_limits(
-                            q_smooth
-                        )
+                        q_safe = self._motion_controller.apply_velocity_limits(q_smooth)
                     with self._profiler.stage("send_cmd"):
                         self._motion_controller.send(q_safe)
                     self._motion_controller.record_data_received()

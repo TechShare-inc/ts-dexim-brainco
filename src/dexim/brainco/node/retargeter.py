@@ -26,10 +26,10 @@ from dexim.brainco.interface._conversion import JOINT_LIMITS, NUM_JOINTS
 # that the finger vector maps to.  Thumb maps to 2 joints; others to 1.
 _DEFAULT_JOINT_MAP: list[list[int]] = [
     [0, 1],  # thumb  -> thumb_flex(0) + thumb_aux(1)
-    [2],     # index  -> index(2)
-    [3],     # middle -> middle(3)
-    [4],     # ring   -> ring(4)
-    [5],     # pinky  -> pinky(5)
+    [2],  # index  -> index(2)
+    [3],  # middle -> middle(3)
+    [4],  # ring   -> ring(4)
+    [5],  # pinky  -> pinky(5)
 ]
 
 # Per-finger axis weights for mapping a 3D vector to flexion magnitude.
@@ -94,8 +94,11 @@ class Retargeter:
         )
 
         self._thumb_lateral_axis = np.array(
-            thumb_lateral_axis if thumb_lateral_axis is not None
-            else _DEFAULT_THUMB_LATERAL_AXIS,
+            (
+                thumb_lateral_axis
+                if thumb_lateral_axis is not None
+                else _DEFAULT_THUMB_LATERAL_AXIS
+            ),
             dtype=np.float64,
         )
 
@@ -148,9 +151,7 @@ class Retargeter:
             Joint angles in radians of shape (NUM_JOINTS,), or None on error.
         """
         if features.shape[0] < 5:
-            logger.error(
-                f"Expected at least 5 finger vectors, got {features.shape[0]}"
-            )
+            logger.error(f"Expected at least 5 finger vectors, got {features.shape[0]}")
             return None
 
         q = np.zeros(NUM_JOINTS, dtype=np.float64)
@@ -168,9 +169,7 @@ class Retargeter:
             for joint_idx in target_joints:
                 if joint_idx == 1:  # thumb_aux: use lateral component
                     lateral_scalar = np.dot(vec, self._thumb_lateral_axis)
-                    t_joint = np.clip(
-                        lateral_scalar / self._max_vector_norm, 0.0, 1.0
-                    )
+                    t_joint = np.clip(lateral_scalar / self._max_vector_norm, 0.0, 1.0)
                 else:
                     t_joint = t
 
