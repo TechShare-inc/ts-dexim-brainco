@@ -3,6 +3,8 @@ name = "dexim-brainco"
 version = "0.1.0"
 description = "BrainCo Revo2 dexterous hand — model, interface, and teleoperation control node"
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 authors = [
     { name = "haoyan.li", email = "haoyan.li@techshare.co.jp" }
 ]

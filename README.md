@@ -95,12 +95,82 @@ pixi run test-hardware
 
 Requires a connected BrainCo Revo2 hand.
 
-## URDF / Model Assets
+## Vendored Assets
 
-URDF assets for the Revo2 kinematic model are sourced from
-[BrainCoTech/brainco_hand_ros2](https://github.com/BrainCoTech/brainco_hand_ros2)
-(`revo2_description` package). See that repository for license terms before
-redistribution.
+The Revo2 URDF models and 3D meshes are vendored from
+[BrainCoTech/revo2_description](https://github.com/BrainCoTech/revo2_description)
+under the `vendors/` directory. This allows the kinematic model to load URDF
+files without requiring ROS 2 to be installed.
+
+### Structure
+
+```
+vendors/
+└── revo2_description/        # git clone of BrainCoTech/revo2_description
+    ├── urdf/                 # .urdf (and .urdf.xacro) for left/right hands
+    ├── meshes/               # .STL mesh files
+    ├── launch/               # ROS 2 launch files (unused by dexim-brainco)
+    └── rviz/                 # RViz config files (unused by dexim-brainco)
+```
+
+### Setup
+
+The vendor is **tracked as a full Git clone** inside this repository.
+After cloning `ts-dexim-brainco`, initialise the vendor:
+
+```bash
+cd ts-dexim-brainco
+git submodule update --init --recursive
+```
+
+> If `vendors/revo2_description` is still empty, clone it manually:
+>
+> ```bash
+> git clone https://github.com/BrainCoTech/revo2_description.git vendors/revo2_description
+> ```
+
+### Updating the Vendor
+
+To pull the latest URDF updates from upstream:
+
+```bash
+cd vendors/revo2_description
+git pull origin main
+```
+
+Then commit the updated vendor in the parent repo:
+
+```bash
+cd ../..
+git add vendors/revo2_description
+git commit -m "chore(vendor): update revo2_description from upstream"
+```
+
+### How the Model Uses It
+
+`BrainCoModel` (in `src/dexim/brainco/model/model.py`) automatically resolves
+the URDF path relative to the vendored directory and builds a Pinocchio
+kinematic model at runtime:
+
+```python
+from dexim.brainco.model.factory import create_model
+
+# Left hand (default)
+left_model = create_model("left")
+print(left_model.nq, left_model.tip_frame_names)
+
+# Right hand
+right_model = create_model("right")
+```
+
+The model sets `ROS_PACKAGE_PATH` temporarily during build so Pinocchio can
+resolve `package://revo2_description/...` mesh references inside the URDF.
+
+### License
+
+The vendored assets are from [BrainCoTech/revo2_description](https://github.com/BrainCoTech/revo2_description),
+licensed under **Apache 2.0**. See `vendors/revo2_description/LICENSE` for the
+full license text.
 
 ## Development
 

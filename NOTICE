@@ -1,0 +1,18 @@
+dexim-brainco
+Copyright 2025 TechShare Inc.
+
+This product includes software developed by third parties:
+
+--------------------------------------------------------------------------------
+Vendored: BrainCoTech/revo2_description
+  Path      : vendors/revo2_description/
+  License   : Apache License 2.0
+  Copyright : BrainCo Technologies
+  URL       : https://github.com/BrainCoTech/revo2_description
+
+  Contains URDF models, 3D mesh files (.STL), and ROS 2 launch/rviz
+  configurations for BrainCo Revo2 dexterous hands.
+
+  Used unmodified as a vendored dependency for kinematic model loading
+  in src/dexim/brainco/model/model.py.
+--------------------------------------------------------------------------------

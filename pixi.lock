@@ -447,7 +447,7 @@ packages:
 - pypi: ./
   name: dexim-brainco
   version: 0.1.0
-  sha256: 27074ba6f402ad21bdd2b929c4e72ecae20bcdee6508e7e21a8046d840bbadf8
+  sha256: da79d21184ab3d7886078148a223e5e24eb2ac8ad237cfdaf9afdaea6ee28445
   requires_dist:
   - numpy>=2.2.0
   - loguru>=0.7.0
