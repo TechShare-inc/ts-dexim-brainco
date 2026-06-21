@@ -292,6 +292,14 @@ class BrainCoControlNode(PubSubDeviceNode):
             logger.error(f"Error disconnecting on stop: {exc}")
         super().on_stop()
 
+    def on_start_recording(self) -> None:
+        """Handle start-recording command (not yet implemented)."""
+        logger.info(f"{self.node_id} START_RECORDING (not implemented)")
+
+    def on_stop_recording(self) -> None:
+        """Handle stop-recording command (not yet implemented)."""
+        logger.info(f"{self.node_id} STOP_RECORDING (not implemented)")
+
     def on_shutdown(self) -> None:
         logger.info(f"{self.node_id} SHUTDOWN")
         self._publisher.close()

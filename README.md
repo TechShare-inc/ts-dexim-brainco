@@ -23,11 +23,45 @@ pixi run pip install bc-stark-sdk
 
 ```
 src/dexim/brainco/
-  cli/              CLI commands (config, devices, joint, run)
+  cli/              CLI commands (run, status, probe, check, config, model, joint, devices)
   interface/        RobotInterface implementations
     backends/       Hardware backends (modbus_rs485)
   model/            Kinematic model (BrainCoModel)
-  node/             Teleoperation control node
+  node/             Control node (extractor, retargeter, filter, vel-limit, publish)
+  viz/              3D visualization (Viser-based renderer + ZMQ subscriber)
+```
+
+## CLI Usage
+
+```bash
+# Start the control node (mock mode)
+ dexim-brainco run --mode mock --hand left
+
+# Start with hardware (Modbus RS-485)
+ dexim-brainco run --mode hw --port COM5 --baud 460800 --hand left
+
+# Use a named device from config
+ dexim-brainco run --device left_revo2
+
+# Manage configs
+ dexim-brainco config new lab-revo2 --hand left
+ dexim-brainco config list
+
+# Register named devices
+ dexim-brainco devices add left_revo2 --config lab-revo2
+ dexim-brainco devices list
+
+# Direct joint commands (hardware required)
+ dexim-brainco joint open --port COM5
+ dexim-brainco joint close --port COM5
+ dexim-brainco joint watch --port COM5
+
+# Launch 3D visualizer
+ dexim-brainco viz --hand left --port 8080
+
+# Check device connectivity
+ dexim-brainco probe --port COM5
+ dexim-brainco check --port COM5
 ```
 
 ## Configuration
@@ -64,9 +98,29 @@ interface:
       carrot_lookahead_cycles: 0.0
 
 brainco:
-  model: revo2
   side: left
+
+control:
+  rate_hz: 30.0
+  enable_velocity_limiting: true
+  max_joint_velocity_rad_s: 1.0
+
+subscriber:
+  address: tcp://localhost:5555
 ```
+
+### Control Pipeline
+
+The node runs the following pipeline each tick (30 Hz):
+
+1. **Receive** skeleton data from the Manus glove subscriber
+2. **Extract** finger-direction vectors from joint positions
+3. **Scale** feature vectors (per-finger alpha)
+4. **Retarget** using direct linear mapping (finger vectors → joint angles)
+5. **Filter** joint angles (WMA/EMA/One Euro)
+6. **Velocity-limit** joint commands for safety
+7. **Send** joint targets to the hardware via shared memory
+8. **Publish** action and observation data for visualization
 
 Set `DEXIM_CONFIG_DIR` to override the config directory.
 

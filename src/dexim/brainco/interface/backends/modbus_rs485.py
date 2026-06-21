@@ -167,9 +167,20 @@ class BrainCoModbusRS485Backend:
 
         if self._auto_calibrate:
             logger.info("Running auto-calibration...")
-            # Calibration call TBD — depends on SDK API version.
-            # await self._client.calibrate(self._slave_id)
-            logger.warning("auto_calibrate is not yet implemented")
+            try:
+                await self._client.set_finger_unit_mode(
+                    self._slave_id, libstark.StarkUnitMode.Radians
+                )
+                await self._client.calibrate_finger_position(self._slave_id)
+            except AttributeError:
+                logger.warning(
+                    "auto_calibrate: calibrate_finger_position not available "
+                    "in this SDK version -- skipping calibration"
+                )
+            except Exception as exc:
+                logger.warning(
+                    f"auto_calibrate failed (hand may already be calibrated): {exc}"
+                )
 
     def disconnect(self) -> None:
         """Close the Modbus connection and event loop."""
