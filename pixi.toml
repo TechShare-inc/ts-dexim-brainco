@@ -1,0 +1,31 @@
+[workspace]
+authors = ["haoyan.li <haoyan.li@techshare.co.jp>"]
+channels = ["conda-forge"]
+name = "ts-dexim-brainco"
+platforms = ["win-64"]
+version = "0.1.0"
+
+[tasks]
+test = "pytest tests/ -m 'not hardware and not requires_model'"
+test-cov = "pytest tests/ -m 'not hardware and not requires_model' --cov=src/dexim/brainco --cov-report=term-missing"
+test-model = "pytest tests/ -m requires_model"
+test-hardware = "pytest tests/hardware"
+
+[dependencies]
+python = "3.10.*"
+pinocchio = ">=3.9.0,<4"
+pytorch-cpu = "*"
+
+[pypi-dependencies]
+dexim-brainco = { path = ".", editable = true }
+dexim-core = { git = "https://github.com/TechShare-inc/ts-dexim-core.git", branch = "dev" }
+dexim-cli-common = { git = "https://github.com/TechShare-inc/ts-dexim-cli-common.git", branch = "dev" }
+pytest = ">=9.0.2, <10"
+pytest-cov = ">=7.0.0, <8"
+ruff = ">=0.15.5, <0.16"
+
+[feature.dev.pypi-dependencies]
+scipy-stubs = "*"
+
+[environments]
+dev = ["dev"]
