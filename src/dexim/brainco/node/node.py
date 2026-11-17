@@ -182,7 +182,12 @@ class BrainCoControlNode(PubSubDeviceNode):
                 if q is not None:
                     # Extract only the 6 actively-controlled joints from
                     # the full 11-DOF URDF-model output.
-                    q = q[URDF_ACTIVE_JOINT_INDICES]
+                    if q.shape == (11,):
+                        q = q[URDF_ACTIVE_JOINT_INDICES]
+                    elif q.shape != (NUM_JOINTS,):
+                        raise ValueError(
+                            "Legacy Revo2 solve requires 6 or 11 positions"
+                        )
                     with self._profiler.stage("filter"):
                         q_smooth = self._joint_filter(q)
                     with self._profiler.stage("vel_lim"):

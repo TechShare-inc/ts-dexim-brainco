@@ -1,7 +1,7 @@
 [project]
 name = "dexim-brainco"
 version = "0.1.0"
-description = "BrainCo Revo2 dexterous hand — model, interface, and teleoperation control node"
+description = "BrainCo Revo2/Revo3 offline models, mock control and legacy Revo2 node"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -22,8 +22,9 @@ dexim-brainco = "dexim.brainco.cli:standalone_app"
 
 [project.optional-dependencies]
 hardware = [
-    "bc-stark-sdk",
+    "bc-stark-sdk==2.0.9",
 ]
+revo3-hardware = ["bc-revo3-sdk==2.3.5"]
 viz = [
     "pinocchio>=3.9.0",
     "viser>=0.2.0",

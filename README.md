@@ -236,3 +236,134 @@ ruff check src tests
 # Run specific test file
 pixi run test tests/unit/test_conversion.py
 ```
+
+## Revo2 / Revo3 offline support
+
+This checkout adds explicit `revo2` and `revo3`, left/right, synthetic/replay
+support. It does **not** qualify physical hardware. `run` is the legacy Revo2
+node; a Revo3 config is rejected there. Hardware connection, scanning and
+calibration are gated pending a qualified device profile. Install this unpublished
+candidate from its explicit local path; do not advance umbrella gitlinks.
+
+```bash
+pip install -e /tmp/ts-dexim-brainco-package --no-deps
+dexim-brainco offline --model revo2 --side left --check
+dexim-brainco offline --model revo3 --side right --steps 20
+# JSON array of core HandState.to_dict() records:
+dexim-brainco offline --model revo3 --side left --steps 20 --replay hand.json
+```
+
+The command is bounded to 1–1000 steps, emits JSON lines, and never loads a
+native SDK. Each line separates `action` (successful issued write) from
+`observation` (independent mock read). A replay retains original capture times
+in `replay.original_timestamp`, publishes fresh Unix capture time, preserves
+record order and stops at EOF. The standalone demonstration uses deterministic
+20 ms control ticks without sleeping; the umbrella worker owns real-time replay
+scheduling. It is not a real-time hardware benchmark.
+
+The public import is `dexim.brainco.offline`: `OfflineConfig`,
+`describe_model`, `synthetic_hand`, `load_replay`, `OfflineController` and the
+immutable action/observation/report records. Config defaults retain Revo2;
+new callers should explicitly name model and side. Unknown config fields,
+malformed/duplicate IDs, wrong glove/side, invalid source timing, nonfinite
+positions and invalid quaternions are rejected. The explicit 25-point layout is
+root, thumb (4 points), then index/middle/ring/little (5 points each). Custom
+ordered IDs are allowed; their anatomical ordering must match this layout.
+
+```python
+import time
+from dexim.brainco.offline import OfflineConfig, OfflineController, synthetic_hand
+
+config = OfflineConfig(model="revo3", side="left", glove_id=1)
+controller = OfflineController(config)
+controller.prepare()  # observations available before activation
+controller.activate("unique-epoch", time.monotonic() + 0.02)
+# The worker calls watchdog(epoch, strictly_increasing_sequence) and step(...)
+# at its bounded cadence. Capture timestamps are Unix; deadlines are monotonic.
+result = controller.step(synthetic_hand(config, time.time()), epoch_id="unique-epoch")
+controller.end("unique-epoch")  # observations remain available
+controller.shutdown()
+```
+
+Watchdog, input loss, stale observations, invalid solves and failed writes latch
+faults and revoke authority. Epoch IDs cannot be reused; old work cannot write
+in a later epoch. A fault requires a new controller instance. All safety reports
+are software/mock outcomes, never evidence of physical stop. Maintenance and
+prepared session ownership exclude each other.
+
+### Model facts and retargeting limits
+
+Descriptors use named canonical URDF independent order and radians, separate
+from SDK order. Revo2 has 6 independent/11 full joints; five mimic positions are
+explicitly **derived**, not independently measured. New Revo2 limits use the
+canonical rounded radians (1.57/1.03/1.41), preserving legacy conversion's
+90/59/81-degree constants only in the explicit legacy path. Revo3 has 21
+independent joints with distinct left/right bounds. The URDF's zero effort and
+velocity metadata are not runtime limits; `max_velocity` is an explicit offline
+limit in radians/second (default 2). Mock torque/velocity feedback is unavailable
+(NaN in core JointState), and currents are never labeled torque.
+
+Retargeting uses root-quaternion hand-local geometry: Revo2 deliberately reduces
+finger curl into coupled axes; Revo3 retains MCP palm-plane flexion, PIP/DIP
+segment bends, finger spread and bounded thumb opposition. Thumb's four source
+points cannot fully identify all five independent thumb axes. This geometric
+approximation is deterministic and bounded, not native IK or physical tracking
+acceptance. Filtering is followed by final position and velocity clamps.
+
+`joints.json` contains numeric facts from official description revision
+`324cd0c5fcf71e077d8daa9514ef259ade85eba7`; `asset_hashes.json` records the four
+canonical URDF SHA256 hashes. No external URDF, mesh or SDK binary is included.
+`descriptor.validate_assets(path)` requires that exact model/side hash and
+available meshes; missing/unlicensed assets must be supplied separately. Revo3
+SDK thumb aliases follow the pinned joint-state aligner/SDK table order
+MCP/PIP/DIP/CMP/CMR; physical signs, offsets and limit readback remain unqualified.
+
+### Observed-state rendering
+
+Rendering is package-local and opt-in. Ordinary package/CLI/offline imports do
+not import Pinocchio, Viser, trimesh or vendor SDKs. With optional native FK and
+Viser installed and a licensed canonical external URDF supplied:
+
+```python
+from dexim.brainco.offline import describe_model
+from dexim.brainco.offline.render import ObservedRenderer
+
+renderer = ObservedRenderer(describe_model("revo3", "left"),
+                            "/external/revo3_left.urdf", server)
+renderer.update(result.observation)
+renderer.close()
+```
+
+This displays the FK joint skeleton, including derived Revo2 mimic expansion,
+and rejects action records or mismatched model/side/names. It does not claim
+mesh rendering. FK requires the pinned external URDF but does not need meshes;
+mesh validation is separately available. The old session renderer can be
+registered explicitly with `dexim.brainco.register_visualizer_renderer()` when
+using the legacy visualizer. New offline observations are rendered through the
+typed renderer above, not the legacy commanded-action subscriber.
+
+### SDK seams and verification
+
+Separate Revo2 (`bc-stark-sdk==2.0.9`) and Revo3 (`bc-revo3-sdk==2.3.5`) fake
+seams exercise pinned stub/example APIs. SDK dependencies remain optional;
+physical activation without qualification is rejected before native imports.
+Revo2 selects `FingerUnitMode.Normalized`, never calibration. Revo3 uses one-shot
+`motion.set_position`, not scheduled `move_to`. Awaitables are bounded; errors
+propagate without cached healthy state. A bus has one owner. A completed write,
+timeout, cancellation or close is not mechanical stop evidence. Injected SDKs
+are a caller trust boundary and must be fakes in offline work.
+
+`pixi run --locked test` is the mandatory task; this unchanged lock supports
+only win-64, so Linux reports unsupported-platform. Additional diagnostics use
+the existing locked Linux umbrella Python with verified pinned core sources:
+
+```bash
+PYTHONPATH=src:/tmp/ts-dexim-dev-verify-20261113/packages/dexim-core/src \
+  /tmp/ts-dexim-dev-verify-20261113/.pixi/envs/default/bin/python \
+  -m pytest tests/unit tests/mock -m 'not hardware and not requires_model'
+```
+
+No hardware tests, device scans, connections, calibration or motion form part of
+this offline acceptance. Hardware identity, firmware, transports, signs/zeros,
+limits, health semantics and confirmed stop behavior require separately
+authorized qualification. Live MANUS/capture migration remains separate.

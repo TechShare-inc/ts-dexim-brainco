@@ -11,10 +11,11 @@ Submodules:
 __version__ = "0.1.0"
 
 
-def _register_visualizer_renderer() -> None:
+def register_visualizer_renderer() -> None:
     """Register BrainCo's renderer factory with the session visualizer.
 
-    Called at import time.  If ``dexim-visualizer`` is not installed the
+    Called explicitly by visualization clients.
+    If ``dexim-visualizer`` is not installed the
     import is silently skipped.
     """
     try:
@@ -22,9 +23,9 @@ def _register_visualizer_renderer() -> None:
     except ImportError:
         return
 
-    from dexim.brainco.viz import create_session_renderer
+    def lazy_renderer(*args, **kwargs):
+        from dexim.brainco.viz import create_session_renderer
 
-    register_renderer_factory("dexim-brainco", create_session_renderer)
+        return create_session_renderer(*args, **kwargs)
 
-
-_register_visualizer_renderer()
+    register_renderer_factory("dexim-brainco", lazy_renderer)
