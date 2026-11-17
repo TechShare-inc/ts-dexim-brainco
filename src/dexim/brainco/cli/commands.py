@@ -123,7 +123,7 @@ def run(
     auto_detect: bool,
     auto_start: bool,
 ) -> None:
-    """Start the BrainCo Revo2 hand control node."""
+    """Start the legacy Revo2-only hand control node (not protocol v2)."""
     console = get_console()
 
     try:

@@ -207,6 +207,7 @@ class BrainCoConfig:
     """
 
     side: str = "left"  # "left" or "right"
+    model: str = "revo2"
 
     feature_extraction: FeatureExtractionConfig = field(
         default_factory=FeatureExtractionConfig
@@ -220,6 +221,8 @@ class BrainCoConfig:
     filter: FilterConfig | None = None
 
     def __post_init__(self) -> None:
+        if self.model != "revo2":
+            raise ValueError("Legacy node supports revo2 only; use offline for revo3")
         if self.side not in ["left", "right"]:
             raise ValueError(f"Invalid side: {self.side}. Must be 'left' or 'right'")
         if not isinstance(self.alpha, list) or len(self.alpha) != 5:
@@ -301,8 +304,10 @@ def load_config(config_path: str) -> BrainCoNodeConfig:
             hardware_core=hw_core,
         )
         interface = InterfaceConfig(mode="hw", hw=hw)
-    else:
+    elif interface_mode == "mock":
         interface = InterfaceConfig(mode="mock")
+    else:
+        raise ValueError("interface.mode must be mock or hw")
 
     control = ControlConfig(**data.get("control", {}))
 

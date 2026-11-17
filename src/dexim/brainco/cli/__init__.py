@@ -13,6 +13,7 @@ from dexim.cli.common import configure_logging, print_banner, setup_error_handli
 from .commands import check, config_group, model_group, probe, run, status, viz
 from .devices import devices_group
 from .joint import joint_group
+from .offline import offline
 
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)
@@ -30,10 +31,11 @@ click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)
     help="Logging verbosity.",
 )
 def brainco_group(log_level: str) -> None:
-    """BrainCo Revo2 dexterous hand - run, status, model, config."""
+    """BrainCo Revo2/Revo3 offline; run is legacy Revo2 only."""
     configure_logging(log_level)
 
 
+brainco_group.add_command(offline)
 brainco_group.add_command(run)
 brainco_group.add_command(status)
 brainco_group.add_command(probe)

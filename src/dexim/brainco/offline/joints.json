@@ -1,0 +1,434 @@
+{
+  "revo2_left": [
+    {
+      "name": "left_thumb_metacarpal_joint",
+      "lower": 0.0,
+      "upper": 1.57,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.03,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_distal_joint",
+      "lower": 0.0,
+      "upper": 1.03,
+      "mimic": {
+        "joint": "left_thumb_proximal_joint",
+        "multiplier": "1",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "left_index_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "left_index_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "left_index_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "left_middle_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "left_middle_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "left_middle_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "left_ring_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "left_ring_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "left_ring_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "left_pinky_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "left_pinky_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "left_pinky_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    }
+  ],
+  "revo2_right": [
+    {
+      "name": "right_thumb_metacarpal_joint",
+      "lower": 0.0,
+      "upper": 1.57,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.03,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_distal_joint",
+      "lower": 0.0,
+      "upper": 1.03,
+      "mimic": {
+        "joint": "right_thumb_proximal_joint",
+        "multiplier": "1",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "right_index_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "right_index_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "right_index_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "right_middle_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "right_middle_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "right_middle_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "right_ring_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "right_ring_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "right_ring_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    },
+    {
+      "name": "right_pinky_proximal_joint",
+      "lower": 0.0,
+      "upper": 1.41,
+      "mimic": null
+    },
+    {
+      "name": "right_pinky_distal_joint",
+      "lower": 0.0,
+      "upper": 1.63,
+      "mimic": {
+        "joint": "right_pinky_proximal_joint",
+        "multiplier": "1.155",
+        "offset": "0"
+      }
+    }
+  ],
+  "revo3_left": [
+    {
+      "name": "left_middle_MPR_joint",
+      "lower": -0.3491,
+      "upper": 0.4363,
+      "mimic": null
+    },
+    {
+      "name": "left_middle_MCP_joint",
+      "lower": -0.0925,
+      "upper": 1.583,
+      "mimic": null
+    },
+    {
+      "name": "left_middle_PIP_joint",
+      "lower": -0.1452,
+      "upper": 1.6001,
+      "mimic": null
+    },
+    {
+      "name": "left_middle_DIP_joint",
+      "lower": -0.322,
+      "upper": 1.5978,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_CMP_joint",
+      "lower": 0.0,
+      "upper": 1.92,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_CMR_joint",
+      "lower": -0.4224,
+      "upper": 1.4277,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_MCP_joint",
+      "lower": -0.0845,
+      "upper": 1.3292,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_PIP_joint",
+      "lower": -0.2618,
+      "upper": 1.5533,
+      "mimic": null
+    },
+    {
+      "name": "left_thumb_DIP_joint",
+      "lower": -0.16,
+      "upper": 1.7616,
+      "mimic": null
+    },
+    {
+      "name": "left_index_MPR_joint",
+      "lower": -0.1745,
+      "upper": 0.5236,
+      "mimic": null
+    },
+    {
+      "name": "left_index_MCP_joint",
+      "lower": -0.0925,
+      "upper": 1.583,
+      "mimic": null
+    },
+    {
+      "name": "left_index_PIP_joint",
+      "lower": -0.1452,
+      "upper": 1.6001,
+      "mimic": null
+    },
+    {
+      "name": "left_index_DIP_joint",
+      "lower": -0.322,
+      "upper": 1.5978,
+      "mimic": null
+    },
+    {
+      "name": "left_ring_MPR_joint",
+      "lower": -0.4363,
+      "upper": 0.3491,
+      "mimic": null
+    },
+    {
+      "name": "left_ring_MCP_joint",
+      "lower": -0.0925,
+      "upper": 1.583,
+      "mimic": null
+    },
+    {
+      "name": "left_ring_PIP_joint",
+      "lower": -0.1452,
+      "upper": 1.6001,
+      "mimic": null
+    },
+    {
+      "name": "left_ring_DIP_joint",
+      "lower": -0.322,
+      "upper": 1.5978,
+      "mimic": null
+    },
+    {
+      "name": "left_little_MPR_joint",
+      "lower": -0.5236,
+      "upper": 0.1745,
+      "mimic": null
+    },
+    {
+      "name": "left_little_MCP_joint",
+      "lower": -0.0925,
+      "upper": 1.583,
+      "mimic": null
+    },
+    {
+      "name": "left_little_PIP_joint",
+      "lower": -0.1452,
+      "upper": 1.6001,
+      "mimic": null
+    },
+    {
+      "name": "left_little_DIP_joint",
+      "lower": -0.322,
+      "upper": 1.5978,
+      "mimic": null
+    }
+  ],
+  "revo3_right": [
+    {
+      "name": "right_middle_MPR_joint",
+      "lower": -0.3490658503988659,
+      "upper": 0.4363323129985824,
+      "mimic": null
+    },
+    {
+      "name": "right_middle_MCP_joint",
+      "lower": -0.08726646259971647,
+      "upper": 1.5707963267948966,
+      "mimic": null
+    },
+    {
+      "name": "right_middle_PIP_joint",
+      "lower": -0.13962634015954636,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_middle_DIP_joint",
+      "lower": -0.3141592653589793,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_CMP_joint",
+      "lower": 0.0,
+      "upper": 1.9198621771937625,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_CMR_joint",
+      "lower": 0.0,
+      "upper": 1.8500490071139892,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_MCP_joint",
+      "lower": -0.06981317007977318,
+      "upper": 1.3264502315156905,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_PIP_joint",
+      "lower": -0.2617993877991494,
+      "upper": 1.5533430342749532,
+      "mimic": null
+    },
+    {
+      "name": "right_thumb_DIP_joint",
+      "lower": -0.15707963267948966,
+      "upper": 1.7453292519943295,
+      "mimic": null
+    },
+    {
+      "name": "right_index_MPR_joint",
+      "lower": -0.17453292519943295,
+      "upper": 0.5235987755982988,
+      "mimic": null
+    },
+    {
+      "name": "right_index_MCP_joint",
+      "lower": -0.08726646259971647,
+      "upper": 1.5707963267948966,
+      "mimic": null
+    },
+    {
+      "name": "right_index_PIP_joint",
+      "lower": -0.13962634015954636,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_index_DIP_joint",
+      "lower": -0.3141592653589793,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_ring_MPR_joint",
+      "lower": -0.4363323129985824,
+      "upper": 0.3490658503988659,
+      "mimic": null
+    },
+    {
+      "name": "right_ring_MCP_joint",
+      "lower": -0.08726646259971647,
+      "upper": 1.5707963267948966,
+      "mimic": null
+    },
+    {
+      "name": "right_ring_PIP_joint",
+      "lower": -0.13962634015954636,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_ring_DIP_joint",
+      "lower": -0.3141592653589793,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_little_MPR_joint",
+      "lower": -0.5235987755982988,
+      "upper": 0.17453292519943295,
+      "mimic": null
+    },
+    {
+      "name": "right_little_MCP_joint",
+      "lower": -0.08726646259971647,
+      "upper": 1.5707963267948966,
+      "mimic": null
+    },
+    {
+      "name": "right_little_PIP_joint",
+      "lower": -0.13962634015954636,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    },
+    {
+      "name": "right_little_DIP_joint",
+      "lower": -0.3141592653589793,
+      "upper": 1.5882496193148399,
+      "mimic": null
+    }
+  ]
+}

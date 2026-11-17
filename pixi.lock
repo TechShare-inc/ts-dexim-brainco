@@ -454,7 +454,8 @@ packages:
   - dexim-core>=0.1.0
   - dexim-cli-common>=0.1.0
   - rich-click>=1.8
-  - bc-stark-sdk ; extra == 'hardware'
+  - bc-stark-sdk==2.0.9 ; extra == 'hardware'
+  - bc-revo3-sdk==2.3.5 ; extra == 'revo3-hardware'
   - pinocchio>=3.9.0 ; extra == 'viz'
   - viser>=0.2.0 ; extra == 'viz'
   - trimesh>=3.20.0 ; extra == 'viz'

@@ -40,3 +40,5 @@ config/
 
 # Hardware core logs
 logs/
+
+.local/

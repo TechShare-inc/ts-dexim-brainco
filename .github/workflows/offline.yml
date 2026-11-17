@@ -1,0 +1,40 @@
+name: Locked offline package
+
+on:
+  pull_request:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: prefix-dev/setup-pixi@d3f436a425481402e6a95a1d1fc10331c708cd9e # v0.10.2
+        with:
+          pixi-version: v0.84.2
+          run-install: false
+      - name: Install locked dependencies
+        run: pixi install --locked
+      - name: Run offline package tests
+        run: pixi run --locked test
+      - name: Build wheel
+        run: pixi exec --spec uv==0.13.5 uv build --wheel
+      - name: Test installed wheel
+        run: pixi run --locked test-wheel
+      - name: Preserve wheel
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: brainco-wheel-${{ github.sha }}
+          path: dist/*.whl

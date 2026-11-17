@@ -61,7 +61,12 @@ class MockInterface(RobotInterface):
         if brainco_model is not None:
             # Map the 6 active control joints (internal order) to their
             # URDF-model indices (0-based).  See _conversion.py for details.
-            _active_indices = URDF_ACTIVE_JOINT_INDICES
+            _active_indices = (
+                list(range(NUM_JOINTS))
+                if brainco_model.model is not None
+                and len(brainco_model.model.lowerPositionLimit) == NUM_JOINTS
+                else URDF_ACTIVE_JOINT_INDICES
+            )
             if brainco_model.model is not None:
                 # Pinocchio names are 1-indexed.
                 self._joint_names = [
@@ -139,8 +144,8 @@ class MockInterface(RobotInterface):
             raise ValueError("Position command (q) is required")
 
         q = np.asarray(cmd.q, dtype=float)
-        if q.shape[0] != self._nq:
-            raise ValueError(f"Expected {self._nq} positions, got {q.shape[0]}")
+        if q.shape != (self._nq,) or not np.isfinite(q).all():
+            raise ValueError(f"Expected {self._nq} finite positions")
 
         self._q = np.clip(q, self._lower, self._upper)
         logger.debug("MockInterface: wrote q=%s", self._q)

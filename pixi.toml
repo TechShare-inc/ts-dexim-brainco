@@ -7,6 +7,7 @@ version = "0.1.0"
 
 [tasks]
 test = "pytest tests/ -m 'not hardware and not requires_model'"
+test-wheel = "python scripts/check_wheel.py"
 test-cov = "pytest tests/ -m 'not hardware and not requires_model' --cov=src/dexim/brainco --cov-report=term-missing"
 test-model = "pytest tests/ -m requires_model"
 test-hardware = "pytest tests/hardware"
