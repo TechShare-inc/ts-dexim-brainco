@@ -1,5 +1,12 @@
 # BrainCo Revo2 Dexterous Hand Control
 
+> [!IMPORTANT]
+> **This repository is archived.** `dexim-brainco` now lives in the dexim
+> monorepo at
+> [`packages/dexim-brainco`](https://github.com/TechShare-inc/dexim/tree/dev/packages/dexim-brainco),
+> imported from `775ae03` of this repository. Open issues and pull requests
+> there. The content below describes the last state of this repository.
+
 `dexim-brainco` is a typed Python package for BrainCo Revo2 dexterous hand
 control over RS-485 / Modbus, built on the `dexim-core` teleoperation framework.
 
