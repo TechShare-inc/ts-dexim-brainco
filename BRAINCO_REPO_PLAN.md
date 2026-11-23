@@ -137,7 +137,6 @@ ts-dexim-brainco/
       factory.py
       mock_interface.py
       _conversion.py
-      _process_logger.py
       backends/
         __init__.py
         modbus_rs485.py
