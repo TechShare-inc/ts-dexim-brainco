@@ -31,6 +31,7 @@ from typing import Any
 import numpy as np
 from dexim.core.ipc import (
     StateBufferReader,
+    StateFault,
     TargetBufferWriter,
     create_state_shm,
     create_target_shm,
@@ -116,9 +117,8 @@ class BrainCoInterface(RobotInterface):
         self._target_writer = TargetBufferWriter(self._target_shm, self._nq)
         self._state_reader = StateBufferReader(self._state_shm, self._nq)
 
-        # Write the safe position (zeros = open hand) into the target buffer so
-        # the Hardware Core starts from a known state.
-        self._target_writer.write(np.zeros(self._nq, dtype=np.float32))
+        # The target buffer stays zero-initialised: the Hardware Core sends no
+        # write until the parent publishes its first target via write().
 
         # Spawn the Hardware Core process.
         from dexim.brainco.interface.hardware_core import run_hardware_core
@@ -174,12 +174,25 @@ class BrainCoInterface(RobotInterface):
         logger.info("BrainCoInterface disconnected")
 
     def is_connected(self) -> bool:
-        """Return whether the Hardware Core process is alive."""
+        """Return whether the Hardware Core is alive and has not latched a fault.
+
+        False once the core process has exited for any reason or has latched a
+        :class:`~dexim.core.ipc.StateFault` (repeated read/write failures or a
+        loop exit).  See :meth:`fault`.
+        """
         if not self._connected:
             return False
         if self._hw_process is None:
             return False
-        return self._hw_process.is_alive()
+        if not self._hw_process.is_alive():
+            return False
+        return self.fault() is StateFault.NONE
+
+    def fault(self) -> StateFault:
+        """Return the fault latched by the Hardware Core, or ``StateFault.NONE``."""
+        if self._state_reader is None:
+            return StateFault.NONE
+        return self._state_reader.fault
 
     # ------------------------------------------------------------------
     # RobotInterface read / write
@@ -217,10 +230,18 @@ class BrainCoInterface(RobotInterface):
             Revo2 hand, which does not report them via Modbus).
 
         Raises:
-            RuntimeError: If not connected.
+            RuntimeError: If not connected, if the Hardware Core process has
+                exited, or if it latched a fault.  The state timestamp only
+                advances on a successful hardware read, so a caller that
+                keeps polling also sees ``stamp`` stop moving.
         """
         if not self._connected or self._state_reader is None:
             raise RuntimeError("BrainCoInterface is not connected")
+        fault = self._state_reader.fault
+        if fault is not StateFault.NONE:
+            raise RuntimeError(f"BrainCoInterface hardware core faulted: {fault.name}")
+        if self._hw_process is None or not self._hw_process.is_alive():
+            raise RuntimeError("BrainCoInterface hardware core is not running")
         angles, vels, taus, timestamp = self._state_reader.read()
         return JointState(
             q=angles.astype(np.float64),
@@ -234,7 +255,17 @@ class BrainCoInterface(RobotInterface):
     # ------------------------------------------------------------------
 
     def _release_shm(self) -> None:
-        """Close and unlink shared memory."""
+        """Close and unlink shared memory.
+
+        Ctypes ``from_buffer()`` structures pin the SHM buf memoryview, so
+        they are released before ``shm.close()``.
+        """
+        if self._target_writer is not None:
+            self._target_writer.close()
+            self._target_writer = None
+        if self._state_reader is not None:
+            self._state_reader.close()
+            self._state_reader = None
         if self._target_shm is not None:
             try:
                 self._target_shm.close()
