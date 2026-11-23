@@ -185,3 +185,34 @@ class TestLifecycleSequence:
         node.on_shutdown()
         assert node._publisher.is_active is False
         assert node._publisher._pub is None
+
+
+# ---------------------------------------------------------------------------
+# on_standby
+# ---------------------------------------------------------------------------
+
+
+class TestOnStandby:
+    def test_connects_but_sends_no_motion(self, make_brainco_node):
+        """STANDBY opens the link and publishes, but writes no target."""
+        node = make_brainco_node()
+        mock_iface = _mock_interface()
+        node.interface = mock_iface
+        node._motion_controller._interface = mock_iface
+        with patch.object(node._motion_controller.rate_limiter, "sleep"):
+            node.on_standby()
+        mock_iface.connect.assert_called_once()
+        mock_iface.write.assert_not_called()
+        assert node._publisher.is_active is True
+
+    def test_default_interface_connects_and_is_not_written(self, make_brainco_node):
+        """The fixture's mock interface is connected by STANDBY and never written."""
+        node = make_brainco_node()
+        assert not node.interface._connected
+        with (
+            patch.object(node._motion_controller.rate_limiter, "sleep"),
+            patch.object(node.interface, "write") as write,
+        ):
+            node.on_standby()
+        assert node.interface._connected
+        write.assert_not_called()

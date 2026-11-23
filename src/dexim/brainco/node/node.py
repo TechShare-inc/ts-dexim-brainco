@@ -256,16 +256,16 @@ class BrainCoControlNode(PubSubDeviceNode):
     # ManagedNode lifecycle hooks
     # ------------------------------------------------------------------
     def on_standby(self) -> None:
-        """Enter STANDBY: connect interface, move to safe home, then publish.
+        """Enter STANDBY: connect interface and publish, without moving the hand.
 
         ``DeviceNode.on_standby()`` handles ``interface.connect()`` first,
         so that ``MotionController.initialize()`` can read the initial
         joint state without a "not connected" error.
 
-        After initialization the hand is moved to the safe open-hand
-        position (all zeros) so that the visualizer and any monitoring
-        system see the safe home pose rather than whatever position the
-        hand was last at.
+        STANDBY sends no motion: the hand stays where it is until the first
+        teleop target, and the Hardware Core writes nothing before then.  The
+        explicit safe-position moves remain on STOP and on a data timeout
+        (``safe_position_on_timeout``).
 
         The publisher is then activated so observations are streamed even
         before teleop is started (e.g., for monitoring/visualization).
@@ -273,9 +273,6 @@ class BrainCoControlNode(PubSubDeviceNode):
         logger.info(f"{self.node_id} STANDBY")
         super().on_standby()
         self._motion_controller.initialize()
-        # Move to safe open-hand position so the visualizer shows the hand
-        # at its canonical safe pose during standby.
-        self._motion_controller.move_to_safe(self.get_safe_position())
         # Activate publisher so observations are published even before
         # teleop is started (e.g., for monitoring/visualization).
         self._publisher.activate()

@@ -25,6 +25,20 @@ jobs:
         with:
           pixi-version: v0.84.2
           run-install: false
+      # dexim-core and dexim-cli-common come from the private dexim repo; a
+      # read-only deploy key lets uv's git fetch reach it over SSH.
+      - name: Authorize the private dexim dependency
+        shell: bash
+        env:
+          DEXIM_DEPLOY_KEY: ${{ secrets.DEXIM_DEPLOY_KEY }}
+        run: |
+          ssh_dir="$(cygpath -m "$HOME")/.ssh"
+          mkdir -p "$ssh_dir"
+          printf '%s\n' "$DEXIM_DEPLOY_KEY" > "$ssh_dir/dexim_deploy"
+          chmod 600 "$ssh_dir/dexim_deploy"
+          ssh-keyscan -t ed25519 github.com >> "$ssh_dir/known_hosts"
+          git config --global core.sshCommand "ssh -i '$ssh_dir/dexim_deploy' -o IdentitiesOnly=yes -o UserKnownHostsFile='$ssh_dir/known_hosts'"
+          git config --global url."git@github.com:TechShare-inc/dexim.git".insteadOf "https://github.com/TechShare-inc/dexim.git"
       - name: Install locked dependencies
         run: pixi install --locked
       - name: Run offline package tests
