@@ -8,7 +8,7 @@ license-files = ["LICENSE", "NOTICE"]
 authors = [
     { name = "haoyan.li", email = "haoyan.li@techshare.co.jp" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.2.0",
     "loguru>=0.7.0",
@@ -58,13 +58,13 @@ namespace = true
 # ── Tool config ────────────────────────────────────────────────────────────────
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 

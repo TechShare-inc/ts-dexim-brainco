@@ -13,14 +13,14 @@ test-model = "pytest tests/ -m requires_model"
 test-hardware = "pytest tests/hardware"
 
 [dependencies]
-python = "3.10.*"
+python = "3.12.*"
 pinocchio = ">=3.9.0,<4"
 pytorch-cpu = "*"
 
 [pypi-dependencies]
 dexim-brainco = { path = ".", editable = true }
-dexim-core = { git = "https://github.com/TechShare-inc/ts-dexim-core.git", branch = "dev" }
-dexim-cli-common = { git = "https://github.com/TechShare-inc/ts-dexim-cli-common.git", branch = "dev" }
+dexim-core = { git = "https://github.com/TechShare-inc/dexim.git", branch = "dev", subdirectory = "packages/dexim-core" }
+dexim-cli-common = { git = "https://github.com/TechShare-inc/dexim.git", branch = "dev", subdirectory = "packages/dexim-cli-common" }
 pytest = ">=9.0.2, <10"
 pytest-cov = ">=7.0.0, <8"
 ruff = ">=0.15.5, <0.16"
