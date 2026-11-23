@@ -1705,7 +1705,7 @@ packages:
   - pytest>=7.0.0 ; extra == 'dev'
   - pytest-cov>=4.0.0 ; extra == 'dev'
   - ruff>=0.1.0 ; extra == 'dev'
-  requires_python: '>=3.10'
+  requires_python: '>=3.12'
 - pypi: git+https://github.com/TechShare-inc/dexim.git?subdirectory=packages%2Fdexim-cli-common&branch=dev#292f17f2071e5133979348db3b8176f5490ec9bb
   name: dexim-cli-common
   version: 1.0.0
